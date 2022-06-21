@@ -40,3 +40,18 @@
     ```typescript
       myPeerConnection.setRemoteDescription(answer);
     ```
+- 상호 offer, answer을 주고받은 브라우저는 icecandidate 이벤트가 발생합니다.
+- 일반적으로 로컬에서 RTCPeerConnection.setLocalDescription()을 호출한 후에 발생합니다. 몇가지 이벤트 또한 발생합니다.
+- RTCPeerConnection을 생성할 때 icecandidate 이벤트를 등록하여, 발생된 ice 값을 상호 브라우저에게 전달하여 addICECandidate()로 설정합니다.
+    ```typescript
+      function makeConnection() { // makeConnection은 모든 브라우저에서 호출
+        myPeerConnection = new RTCPeerConnection();
+        myPeerConnection.addEventListener('icecandidate', (data) => {
+          // data.candidate 값을 상호 브라우저에게 전송
+        });
+      }
+  
+      // 데이터 수신
+      myPeerConnection.addIceCandidate(ice);
+    ```
+- 새 MediaStream 객체가 추가되면 RTCPeerConnection에서 addstream 이벤트가 발생합니다.
