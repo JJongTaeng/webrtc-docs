@@ -13,7 +13,7 @@
 ![webrtc-interface](./WebRTC-Interface.drawio.png)
 - 위 이미지 처럼 Signaling Server를 통해 각 설정 정보를 주고 받아서 연결을 시도합니다.
 - 연결 완료 이후에는 peer-to-peer 통신이 가능합니다.
-- 첫번째로 자신의 stream 정보를 호출합니다. (mediaDevices는 크롬에서 https에서만 지원됩니다.)
+- 첫번째로 자신의 stream 정보를 호출합니다. (`mediaDevices`는 크롬에서 https에서만 지원됩니다.)
     ```typescript
       const myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true});
     ```
@@ -27,16 +27,16 @@
       myPeerConnection.setLocalDescription(offer);
       // offer 서버로 전송..
     ```
-- 서버에서는 다른 Peer 브라우저 B에게 offer를 전송합니다.
-- 브라우저 B또한 A와 같이 myStream과 myPeerConnection을 생성했습니다.
-- 브라우저 B는 offer 데이터를 받아서 remoteDescription을 설정해줍니다. 또 answer을 생성해서 localDescription에 설정하고, 브라우저 A에게 answer을 전달합니다. 
+- 서버에서는 다른 Peer 브라우저 B에게 `offer`를 전송합니다.
+- 브라우저 B또한 A와 같이 `myStream`과 `myPeerConnection`을 생성했습니다.
+- 브라우저 B는 `offer` 데이터를 받아서 `remoteDescription`을 설정해줍니다. 또 `answer`을 생성해서 `localDescription`에 설정하고, 브라우저 A에게 `answer`을 전달합니다. 
     ```typescript
       myPeerConnection.setRemoteDescription(offer);
       const answer = await myPeerConnection.createAnswer();
       myPeerConnection.setLocalDescription(answer);
       // answer 서버로 전송
     ```
-- answer을 받은 브라우저 A는 remoteDescription에 answer을 설정합니다.
+- answer을 받은 브라우저 A는 `remoteDescription`에 `answer`을 설정합니다.
     ```typescript
       myPeerConnection.setRemoteDescription(answer);
     ```
