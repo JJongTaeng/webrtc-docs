@@ -54,4 +54,20 @@
       // 데이터 수신
       myPeerConnection.addIceCandidate(ice);
     ```
-- 새 MediaStream 객체가 추가되면 RTCPeerConnection에서 addstream 이벤트가 발생합니다.
+- `track` 이벤트를 추가하여, 다른 브라우저의 stream 정보를 받아올 수 있습니다.
+- 새로운 인바운드 트랙이 연결에 추가되고 addTrack을 호출하면 트랙 이벤트를 수신합니다. 실제로 확인 시에는 `remoteDescription`에 `answer` 또는 `offer`를 설정할 때 발생합니다.
+- track event는 `offer`, `answer`에 오디오와 비디오 두개의 track이 설정되면 각각의 track을 이벤트 콜백의 인자로 받습니다.
+    ```typescript
+        function makeConnection() { // makeConnection은 모든 브라우저에서 호출
+          myPeerConnection = new RTCPeerConnection();
+          myPeerConnection.addEventListener('track', (track) => {
+            const video = document.createElement("video");
+            video.srcObject = track.streams[0];
+          });
+          myStream.getTracks().forEach(track => {
+            myPeerConnection.addTrack(track, myStream)
+          });
+        } 
+    ```
+- 여기까지 오면 상대방의 stream과 나의 stream을 브라우저에서 확인할 수 있습니다.
+
