@@ -70,8 +70,38 @@
         } 
     ```
 - 여기까지 오면 상대방의 stream과 나의 stream을 브라우저에서 확인할 수 있습니다.
-
 ---
+
+# STUN/TURN SERVER?
+- WebRTC 통신은 Peer to Peer 방식으로 서로 데이터를 주고 받아야 하기 때문에 보내고 받는 Peer의 Public IP를 알고 있어야 합니다.
+- 따라서 ICE 기술을 사용하여 Peer의 Public IP를 찾아야합니다.
+
+
+## ICE(Interactive Connectivity Establishment)
+- ICE(Interactive Connectivity Establishment)는 Peer to Peer 네트워킹 에서 두 대의 컴퓨터가 가능한 한 직접 서로 대화하는 방법을 찾기 위해 컴퓨터 네트워킹 에서 사용되는 기술 입니다.
+- 중앙 서버를 통한 통신은 비용이 많이 들지만 브라우저 또는 클라이언트 간의 직접 통신은 NAT, 방화벽 및 기타 네트워크 장벽으로 인해 매우 까다롭습니다.
+- ICE는 통신하는 피어가 공용 IP 주소를 발견하고 통신하여 다른 피어가 도달할 수 있도록 하는 프레임워크를 제공합니다.
+
+## STUN(Session Traversal Utilities for NAT)
+- STUN(Session Traversal Utilities for NAT)은 NAT 분류를 포함하여 이러한 주소(Public IP) 검색을 위한 표준화된 프로토콜입니다.
+- 실시간 음성, 비디오, 메시징 및 기타 대화형 통신에서 NAT 게이트웨이 통과를 위한 네트워크 프로토콜을 포함한 표준화된 방법 집합입니다.
+- STUN은 ICE(Interactive Connectivity Establishment), SIP(Session Initiation Protocol) 및 WebRTC와 같은 다른 프로토콜에서 사용하는 도구입니다.
+- 이 프로토콜은 일반적으로 공용 인터넷인 NAT의 반대편(공용) 쪽에 있는 타사 네트워크 서버(STUN 서버)의 지원이 필요합니다.
+- 일반적으로 STUN 클라이언트는 STUN 서버에 메시지를 보내 공용 IP 및 포트 정보를 얻은 다음 STUN 서버가 해당 정보를 검색할 수 있습니다. 이 Public IP 및 Port 정보를 사용하여 클라이언트는 인터넷을 통해 P2P 통신을 합니다
+
+![STUN](https://miro.medium.com/max/1302/1*HmMdrpVBTP2vYMhrVOdNOw.webp)
+
+## TURN(Traversal Using Relays around NAT)
+- TURN(Traversal Using Relays around NAT)은 WebRTC 애플리케이션용 네트워크 주소 변환기(NAT) 또는 방화벽의 순회를 지원하는 프로토콜입니다.
+- 경우에 따라 클라이언트 통신 끝점이 서로 다른 유형의 NAT 뒤에 붙어 있거나 대칭 NAT가 사용 중인 경우 TURN 서버라고 하는 릴레이 서버를 통해 미디어를 보내는 것이 더 쉬울 수 있습니다
+- 일반적으로 TURN 클라이언트는 먼저 TURN 서버에 메시지를 보내서 TURN 서버에 IP 주소와 포트를 할당합니다.
+- 할당이 성공하면 클라이언트는 IP 주소와 포트 번호를 사용하여 피어와 통신합니다.
+- TURN 패킷은 상대방의 목적지 주소를 담고 있으며, 이 패킷을 UDP 프로토콜 패킷으로 변환하여 상대방에게 보냅니다.
+- 더 많은 클라이언트 연결이 설정되는 경우 서버 활용 및 막대한 대역폭 사용으로 인해 TURN 서버 비용이 높습니다.
+
+
+![TURN](https://miro.medium.com/max/1400/1*k9ARIJ9Jfkscjji1SNQ4ig.webp)
+
 **WebRTC API**
 
 # RTCPeerConnection
@@ -188,6 +218,28 @@ new RTCPeerConnection(configuration)
 
 ## Events
 ### connectionstatechange
+- RTCPeerConnection에서 connectionstatechange 이벤트가 생길 때, 브라우저에 의해 호출되는 함수입니다.
+- 연결의 상태 집합체가 변할 때마다 발생합니다.
+- 이 상태 집합체는 연결에 의해 사용되는 각각의 네트워크 전송 상태들의 묶음입니다.
+- 해당 이벤트 객체는 특별한 정보를 담고 있지는 않습니다. 새로운 상태를 확인하려면 피어 연결의 connectionState에 해당하는 값을 살펴보십시오.
+- example
+```javascript
+pc.onconnectionstatechange = function(event) {
+  switch(pc.connectionState) {
+    case "connected":
+      // 연결이 완전히 성공
+      break;
+    case "disconnected":
+    case "failed":
+      // 하나 이상의 전송이 예기치 않게 또는 오류로 종료됌
+      break;
+    case "closed":
+      // 연결이 종료됌
+      break;
+  }
+}
+```
+
 ### datachannel
 ### icecandidate
 ### icecandidateerror
@@ -196,25 +248,5 @@ new RTCPeerConnection(configuration)
 ### negotiationneeded
 ### signalingstatechange
 ### track
-
-# WebRTC Protocol
-## ICE
-- Interactive Connectivity Establishment (ICE) 는 브라우저가 peer를 통한 연결이 가능하도록 하게 해주는 프레임워크입니다. 
-- Peer A에서 Peer B까지 단순하게 연결하는 것으로는 작동하지 않는 것에 대한 이유는 많이 있습니다. 
-- 연결을 시도하는 방화벽을 통과해야하기도 하고, 단말에 퍼블릭 IP가 없다면 유일한 주소값을 할당해야할 필요도 있으며 라우터가 peer간의 직접연결을 허용하지 않을 때에는 데이터를 릴레이해야할 경우도 있습니다. 
-- ICE는 이러한 작업을 수행하기 위해 STUND과 TURN 서버 둘다 혹은 하나의 서버를 사용합니다.
-
-## STUN
-- Session Traversal Utilities for NAT (STUN) (단축어 안의 단축어) 는 당신의 공개 주소(public address)를 발견하거나 peer간의 직접 연결을 막는 등의 라우터의 제한을 결정하는 프로토콜입니다.
-- 클라이언트는 인터넷을 통해 클라이언트의 공개주소와 라우터의 NAT 뒤에 있는 클라이언트가 접근가능한지에 대한 답변을 위한 요청을 STUN서버에 보냅니다.
-
-## NAT
-- Network Address Translation (NAT) 는 단말에 공개 IP주소를 할당하기 위해 사용됩니다. 
-- 라우터는 공개 IP 주소를 갖고 있고 모든 단말들은 라우터에 연결되어 있으며 비공개 IP주소(private IP Address)를 갖고 있습니다. 
-- 요청은 단말의 비공개 주소로부터 라우터의 공개 주소와 유일한 포트를 기반으로 번역될 것입니다. 
-- 이러한 경유로 각각의 단말이 유일한 공개 IP 없이 인터넷 상에서 검색 될 수 있는 방법입니다.
-- 어떠한 라우터들은 네트워크에 연결할수 있는 제한을 갖고 있습니다. 따라서 STUN서버에 의해 공개 IP주소를 발견한다고 해도 모두가 연결을 할수 있다는 것은 아닙니다. 
-- 이를 위해 TURN이 필요합니다.
-- 
 
 
