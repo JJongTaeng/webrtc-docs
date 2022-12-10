@@ -84,3 +84,57 @@ peer들은 미디어(offer, answer, sdp)에 대한 정보 교환 뿐아니라 �
 ICE를 사용하면 candidates가 UDP, TCP 를 통해 연결될 수 있으며, UDP가 일반적으로 더 선호되고 광범위하게 지원됩니다.
 
 각 프로토콜은 몇가지 유형의 candidates를 지원하며 candidates 유형은 데이터가 peer에서 peer로 이동하는 방법을 정의합니다.
+
+### Choosing a candidate pair (candidate 쌍 선택)
+ICE 계층은 controlling agent 역할을 할 두 피어 중 하나를 선택합니다.
+
+이것은 연결에 사용할 candidate 쌍에 대한 최종 결정을 내리는 ICE 에이전트입니다.
+
+다른 피어를 controlled agent 라고 합니다.
+
+RTCIceCandidate.transport.role의 값을 검사하여 연결의 끝이 어느 것인지 식별할 수 있습니다.
+
+일반적으로 어느 것이 무엇인지는 중요하지 않습니다.
+
+controlling agent는 어떤 candidate 쌍을 사용할지에 대한 최종 결정을 내릴 책임이 있을 뿐만 아니라 필요한 경우 STUN 및 업데이트된 offer을 사용하여 해당 선택을 controlled agent에 알립니다.
+
+controlled agent는 사용할 candidate 쌍을 알려주기만을 기다립니다.
+
+단일 ICE 세션으로 인해 controlling agent가 둘 이상의 candidate 쌍을 선택할 수 있다는 점을 염두에 두는 것이 중요합니다.
+
+그렇게 하고 controlled agent와 해당 정보를 공유할 때마다 두 피어는 새 candidate 쌍이 설명하는 새 구성을 사용하도록 연결을 재구성합니다.
+
+ICE 세션이 완료되면 ICE 재설정이 발생하지 않는 한 현재 유효한 구성이 최종 구성이 됩니다.
+
+candidate의 각 생성이 끝날 때 candidate 속성이 빈 문자열인 RTCIceCandidate 형식으로 candidate 종료 알림이 전송됩니다.
+
+이 candidate는 해당 알림을 원격 피어에 전달하기 위해 평소와 같이 addIceCandidate() 메서드를 사용하여 연결에 추가해야 합니다.
+
+현재 협상 교환 중에 예상되는 candidate가 더 이상 없으면 candidate 속성이 null인 RTCIceCandidate를 전달하여 candidate 종료 알림을 보냅니다.
+
+이 메시지는 원격 피어로 보낼 필요가 없습니다.
+
+이는 iceGatheringState가 완료로 변경되는 것을 감시하는 대신 icegatheringstatechange 이벤트를 감시하여 감지할 수 있는 상태의 레거시 알림입니다.
+
+## When things go wrong
+negotiation 중에 일이 잘 풀리지 않는 경우가 있습니다.
+
+예를 들어 하드웨어 또는 네트워크 구성 변경에 적응하기 위해 연결을 재협상할 때 협상이 막다른 골목에 도달하거나 협상을 전혀 방해하는 어떤 형태의 오류가 발생할 수 있습니다.
+
+해당 문제에 대한 권한 문제 또는 기타 문제가 있을 수 있습니다.
+
+### ICE 롤백
+이미 활성 상태인 연결을 재협상할 때 협상이 실패하는 상황이 발생하면 이미 실행 중인 호출을 종료하고 싶지 않을 것입니다.
+
+결국 연결을 업그레이드 또는 다운그레이드하거나 진행 중인 세션에 적응하려고 했을 가능성이 큽니다.
+
+통화를 중단하는 것은 그러한 상황에서 과도한 반응이 될 것입니다.
+
+대신 ICE 롤백을 시작할 수 있습니다. 롤백은 SDP offer(the connection configuration by extension)을 마지막으로 연결의 signalingState가 안정적이었던 구성으로 복원합니다.
+
+프로그래밍 방식으로 롤백을 시작하려면 유형이 롤백인 설명을 보내십시오. 설명 개체의 다른 속성은 무시됩니다. 또한 ICE 에이전트는 이전에 offer을 생성한 peer가 원격 peer로부터 offer을 받으면 자동으로 롤백을 시작합니다.
+
+즉, 로컬 피어가 이전에 offer을 보냈음을 나타내는 have-local-offer 상태에 있는 경우, 수신된 offer과 함께 setRemoteDescription()을 호출하면 협상이 발신자인 원격 피어에서 발신자인 로컬 피어로 전환되도록 롤백이 트리거됩니다.
+
+## The entire exchange in a complicated diagram
+![diagram](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Connectivity/webrtc-complete-diagram.png)
