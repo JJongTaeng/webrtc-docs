@@ -6,7 +6,7 @@
 - WebRTC를 구성하는 일련의 표준들은 플러그인이나 제 3자 소프트웨어 설치 없이 종단 간 데이터 공유와 화상 회의를 가능하게 합니다.
 
 # 비디오, 오디오 데이터 교환 예제
-![webrtc-interface](./WebRTC-Interface.drawio.png)
+![webrtc-interface](../WebRTC-Interface.drawio.png)
 - 위 이미지 처럼 Signaling Server를 통해 각 설정 정보를 주고 받아서 연결을 시도합니다.
 - 연결 완료 이후에는 peer-to-peer 통신이 가능합니다.
 - 첫번째로 자신의 stream 정보를 호출합니다. (`mediaDevices`는 크롬에서 https에서만 지원됩니다.)
