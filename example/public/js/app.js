@@ -43,12 +43,11 @@ peer.ontrack = (data) => {
 }
 
 peer.onicecandidate = (data) => {
-  console.log('ice', data);
+  console.log(4, 'send ice')
   if(data.candidate) socket.emit('ice', data.candidate, roomName);
 }
 
 peer.ondatachannel = (event) => {
-  console.log('ondatachannel')
   dataChannel = event.channel;
   event.channel.onmessage = (message) => {
     console.log(message);
@@ -60,10 +59,10 @@ socket.emit('joinRoom', roomName);
 button.onclick = () => dataChannel.send(JSON.stringify({ value: 'hello' }));
 
 socket.on('welcome', async () => {
-  console.log('>>> join other user');
+  console.log(1, 'welcome');
   dataChannel = peer.createDataChannel(new Date().getTime().toString());
   dataChannel.onopen = () => {
-    console.log('datachannel opened')
+    // console.log('datachannel opened')
   }
   dataChannel.onmessage = (message) => {
     console.log('datachannel message = ', message);
@@ -74,7 +73,7 @@ socket.on('welcome', async () => {
 });
 
 socket.on('offer', async (offer) => {
-  console.log('>>> offer = ', offer);
+  console.log(2, 'offer', offer);
 
   peer.setRemoteDescription(offer);
   const answer = await peer.createAnswer();
@@ -83,11 +82,11 @@ socket.on('offer', async (offer) => {
 });
 
 socket.on('answer', (answer) => {
-  console.log(answer);
+  console.log(3, 'answer', answer);
   peer.setRemoteDescription(answer);
 });
 
 socket.on('ice', ice => {
-  console.log('>>> received ice = ', ice);
+  console.log(5, 'received ice');
   peer.addIceCandidate(ice);
 })
