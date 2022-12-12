@@ -2,6 +2,8 @@ const roomName = 'Room';
 const socket = io();
 const localVideo = document.querySelector('#localVideo');
 const peerVideo = document.querySelector('#peerVideo');
+const button = document.querySelector('button');
+
 const config = {
   iceServers: [
     {
@@ -23,6 +25,7 @@ const config = {
   ],
 };
 const peer = new RTCPeerConnection(config);
+let dataChannel;
 
 navigator.mediaDevices.getUserMedia({
   audio: false,
@@ -41,13 +44,30 @@ peer.ontrack = (data) => {
 
 peer.onicecandidate = (data) => {
   console.log('ice', data);
-  if(data.candidate)  socket.emit('ice', data.candidate, roomName);
+  if(data.candidate) socket.emit('ice', data.candidate, roomName);
+}
+
+peer.ondatachannel = (event) => {
+  console.log('ondatachannel')
+  dataChannel = event.channel;
+  event.channel.onmessage = (message) => {
+    console.log(message);
+  }
 }
 
 socket.emit('joinRoom', roomName);
 
+button.onclick = () => dataChannel.send(JSON.stringify({ value: 'hello' }));
+
 socket.on('welcome', async () => {
   console.log('>>> join other user');
+  dataChannel = peer.createDataChannel(new Date().getTime().toString());
+  dataChannel.onopen = () => {
+    console.log('datachannel opened')
+  }
+  dataChannel.onmessage = (message) => {
+    console.log('datachannel message = ', message);
+  }
   const offer = await peer.createOffer();
   peer.setLocalDescription(offer);
   socket.emit('offer', offer, roomName);
@@ -55,6 +75,7 @@ socket.on('welcome', async () => {
 
 socket.on('offer', async (offer) => {
   console.log('>>> offer = ', offer);
+
   peer.setRemoteDescription(offer);
   const answer = await peer.createAnswer();
   peer.setLocalDescription(answer);
