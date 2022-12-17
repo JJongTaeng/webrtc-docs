@@ -12,22 +12,24 @@ app.get("/", (_, res) => res.render("home"));
 app.get("/*", (_, res) => res.redirect("/"));
 
 const httpServer = http.createServer(app);
-const wsServer = SocketIO(httpServer);
-
+const wsServer = SocketIO(httpServer, { path: '/socket.io'});
 wsServer.on('connection', (socket) => {
-  socket.on('joinRoom', (roomName) => {
+  socket.on('joinRoom', ({ roomName }) => {
     socket.join(roomName);
-    socket.to(roomName).emit('welcome');
+    socket.emit('myId', { myId: socket.id });
+    socket.to(roomName).emit('welcome', { callerId: socket.id });
   });
-  socket.on('offer', (offer, roomName) => {
-    socket.to(roomName).emit('offer', offer);
+  socket.on('offer', ({ offer, callerId, receiverId }) => {
+    socket.to(receiverId).emit('offer', { sdp: offer, callerId });
   });
-  socket.on('answer', (answer, roomName) => {
-    socket.to(roomName).emit('answer', answer);
+  socket.on('answer', ({ answer, callerId, receiverId }) => {
+    socket.to(receiverId).emit('answer', { sdp: answer, callerId});
   });
-  socket.on('ice', (ice, roomName) => {
-    socket.to(roomName).emit('ice', ice);
+  socket.on('ice', ({ ice, callerId, receiverId }) => {
+    socket.to(receiverId).emit('ice', { ice, callerId });
   });
+  socket.on('disconnect', () => {
+  })
 })
 
 httpServer.listen(3030, () => console.log('Listening to http://localhost:3030'));
